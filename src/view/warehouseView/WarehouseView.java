@@ -1,19 +1,16 @@
 package view.warehouseView;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import model.warehouse.OrderBins;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import model.warehouse.Warehouse;
 import view.View;
 import view.utils.IconFactory;
@@ -22,10 +19,10 @@ import java.util.HashMap;
 
 public class WarehouseView {
 
-    private BorderPane root;
+    private BorderPane root, stockPane;
     private HBox toolbar;
     private SplitPane splitPane;
-    private Pane warehousePane, stockPane;
+    private Pane warehousePane;
     private WarehouseTable warehouseTable;
     private HashMap<String, StockPane> warehouse2stockPane = new HashMap<>();
     private View view;
@@ -68,23 +65,20 @@ public class WarehouseView {
         String identifier = warehouseTable.getSelectedID();
         if (identifier != null) {
             view.updateWarehouseBins(identifier, getTimeInterval());
-            stockPane.getChildren().setAll(warehouse2stockPane.get(identifier));
+            warehouse2stockPane.get(identifier).setContent(stockPane, splitPane);
         }
     }
 
     public void bindWarehouseMap(ObservableMap<String, Warehouse> warehouseMap) {
-        warehouseMap.addListener(new MapChangeListener<String, Warehouse>() {
-            @Override
-            public void onChanged(Change<? extends String, ? extends Warehouse> change) {
-                if (change.wasAdded()) {
-                    String id = change.getKey();
-                    warehouseTable.addWarehouseID(id);
-                    warehouse2stockPane.putIfAbsent(id, new StockPane(change.getValueAdded()));
-                } else if (change.wasRemoved()) {
-                    String id = change.getKey();
-                    warehouseTable.removeWarehouseID(change.getKey());
-                    warehouse2stockPane.remove(id);
-                }
+        warehouseMap.addListener((MapChangeListener<String, Warehouse>) change -> {
+            if (change.wasAdded()) {
+                String id = change.getKey();
+                warehouseTable.addWarehouseID(id);
+                warehouse2stockPane.putIfAbsent(id, new StockPane(change.getValueAdded()));
+            } else if (change.wasRemoved()) {
+                String id = change.getKey();
+                warehouseTable.removeWarehouseID(change.getKey());
+                warehouse2stockPane.remove(id);
             }
         });
     }
@@ -95,12 +89,14 @@ public class WarehouseView {
         warehouseTable = new WarehouseTable(warehousePane, this);
         warehousePane.getChildren().add(warehouseTable);
 
-        stockPane = new Pane();
-        splitPane.getItems().setAll(warehousePane, new ScrollPane(stockPane));
+        stockPane = new BorderPane();
+        stockPane.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+        splitPane.getItems().setAll(warehousePane, stockPane);
         splitPane.setDividerPositions(0.1);
 
         toolbar.setPadding(new Insets(5, 5, 5, 5));
         toolbar.setSpacing(5);
+        toolbar.setAlignment(Pos.CENTER_LEFT);
 
         exportButton = new Button("");
         exportButton.setPrefHeight(30);

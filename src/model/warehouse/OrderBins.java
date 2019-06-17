@@ -86,7 +86,7 @@ public class OrderBins {
         calendar.setTime(date);
         switch (timeInterval) {
             case DAY:
-                return getYear(date) + "-" + formatDate(date, "MM") + "-" + formatDate(date, "DD");
+                return getYear(date) + "-" + formatDate(date, "MM") + "-" + getDayOfMonth(date);
             case WEEK:
                 return calendar.getWeekYear() + "-KW" + getWeekOfYear(date);
             case MONTH:
@@ -94,6 +94,11 @@ public class OrderBins {
             default:
                 return getYear(date);
         }
+    }
+
+    private static String getDayOfMonth(Date date) {
+        calendar.setTime(date);
+        return String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
     }
 
     private static String getWeekOfYear(Date date) {
